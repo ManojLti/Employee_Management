@@ -1,0 +1,50 @@
+trigger:
+- '*'
+
+pool:
+  vmImage: 'ubuntu-20.04'
+  demands:
+  - npm
+
+variables:
+  buildConfiguration: 'Release'
+ 
+
+
+steps:
+
+
+- task: DotNetCoreCLI@2
+  displayName: 'Restore project dependencies'
+  inputs:
+    command: 'restore'
+    projects: '**/*Employee_Profile/*.csproj'
+
+- task: DotNetCoreCLI@2
+  displayName:  'Build the project - $(buildConfiguration)'
+  inputs:
+    command: 'build'
+    arguments: '--no-restore --configuration $(buildConfiguration)'
+    projects: '**/*Employee_Profile/*.csproj'
+
+- task: DotNetCoreCLI@2
+  displayName: 'Publish the project - $(buildconfiguration)'
+  inputs:
+    command: 'publish'
+    projects: '**/*Employee_Profile/*.csproj'
+    publishWebProjects: false
+    arguments: '--no-build --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/$(buildConfiguration)'
+    zipAfterPublish: true
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: drop'
+  condition: succeeded()
+
+
+
+# Unit Test 
+- task: DotNetCoreCLI@2
+  inputs:
+    command: test
+    projects: '**/*Employee_Management_Test/*.csproj'
+    arguments: '--configuration $(buildConfiguration)'
